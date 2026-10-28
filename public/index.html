@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1020">
+  <title>Log Output | DevOps Lab</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: #121a2d;
+      --border: #26344d;
+      --muted: #95a5c2;
+      --text: #edf3ff;
+      --green: #47e0a0;
+      --blue: #82aaff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: radial-gradient(ellipse at top, #17284a 0, var(--bg) 52%);
+      color: var(--text); font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1100px; margin: auto; padding: 34px 20px 50px; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:28px; }
+    .brand { display:flex; gap:13px; align-items:center; }
+    .logo { display:grid; place-items:center; width:48px; height:48px; border-radius:15px; background:#1d3152; border:1px solid #38547d; font-size:23px; }
+    h1 { font-size:25px; margin:0; letter-spacing:-.6px; }
+    .sub { color:var(--muted); margin:3px 0 0; font-size:13px; }
+    .pill { display:flex; align-items:center; gap:8px; border:1px solid #24684f; color:var(--green); background:#102b28; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:700; }
+    .dot { width:8px; height:8px; border-radius:50%; background:currentColor; box-shadow:0 0 12px currentColor; }
+    .hero { border:1px solid var(--border); background:linear-gradient(135deg,#172440,#111a2d); border-radius:22px; padding:25px; margin-bottom:18px; }
+    .eyebrow { color:var(--blue); text-transform:uppercase; font-size:11px; letter-spacing:1.7px; font-weight:800; }
+    .hero h2 { font-size:22px; margin:8px 0 5px; }
+    .hint { color:var(--muted); margin:0 0 20px; }
+    .hash { overflow-wrap:anywhere; background:#0b1222; border:1px solid #2c3e5d; padding:17px; border-radius:12px; font:14px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace; color:#a8c5ff; }
+    .hash-label { display:flex; justify-content:space-between; gap:10px; margin-bottom:7px; color:var(--muted); font-size:12px; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-bottom:18px; }
+    .card { min-width:0; border:1px solid var(--border); background:rgba(18,26,45,.9); border-radius:17px; padding:19px; }
+    .label { color:var(--muted); font-size:12px; }
+    .value { font-size:23px; font-weight:750; margin-top:8px; letter-spacing:-.5px; }
+    .small { font-size:12px; color:var(--muted); margin-top:5px; overflow-wrap:anywhere; }
+    .section { border:1px solid var(--border); background:rgba(18,26,45,.94); border-radius:18px; overflow:hidden; }
+    .section-head { padding:18px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+    .section-head h3 { margin:0; font-size:15px; }
+    .section-head span { color:var(--muted); font-size:12px; }
+    .logs { padding:4px 20px 14px; max-height:360px; overflow:auto; }
+    .log { display:grid; grid-template-columns:190px minmax(0,1fr); gap:16px; padding:12px 0; border-bottom:1px solid #202c42; font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace; }
+    .log:last-child { border-bottom:0; }
+    .time { color:var(--muted); }
+    .message { color:var(--green); overflow-wrap:anywhere; }
+    footer { color:#71819e; font-size:12px; text-align:center; margin-top:22px; }
+    @media(max-width:700px) {
+      .grid { grid-template-columns:1fr; }
+      .log { grid-template-columns:1fr; gap:3px; }
+      .hero { padding:19px; }
+      h1 { font-size:22px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">?</div>
+        <div><h1>Log Output</h1><p class="sub">DevOps with Kubernetes · Exercise 1.1</p></div>
+      </div>
+      <div class="pill"><span class="dot"></span><span id="connection">CONNECTING</span></div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">Application identity</div>
+      <h2>One instance. One persistent string.</h2>
+      <p class="hint">Generated at startup and kept in memory for this application process.</p>
+      <div class="hash-label"><span>RANDOM STRING</span><span>UUID v4</span></div>
+      <div class="hash" id="randomString">Loading application state…</div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="label">APPLICATION STATUS</div>
+        <div class="value" id="status">Checking…</div>
+        <div class="small">Health endpoint: /health</div>
+      </article>
+      <article class="card">
+        <div class="label">PROCESS UPTIME</div>
+        <div class="value" id="uptime">—</div>
+        <div class="small" id="started">Waiting for start time</div>
+      </article>
+      <article class="card">
+        <div class="label">LOG ENTRIES CAPTURED</div>
+        <div class="value" id="count">—</div>
+        <div class="small">New entry every 5 seconds</div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h3>Live application logs</h3>
+        <span>Auto-refresh · every 2 seconds</span>
+      </div>
+      <div class="logs" id="logs"><p class="sub">Waiting for log entries…</p></div>
+    </section>
+
+    <footer>Local development dashboard · Node.js · Docker-ready · Kubernetes-ready</footer>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, c => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+      })[c]);
+    }
+    function formatUptime(seconds) {
+      const d = Math.floor(seconds / 86400);
+      const h = Math.floor((seconds % 86400) / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      return (d ? d + "d " : "") + h + "h " + m + "m " + s + "s";
+    }
+    async function refresh() {
+      try {
+        const response = await fetch("/api/status", { cache: "no-store" });
+        if (!response.ok) throw new Error("API request failed");
+        const data = await response.json();
+        $("connection").textContent = "CONNECTED";
+        $("status").textContent = data.status.toUpperCase();
+        $("randomString").textContent = data.randomString;
+        $("uptime").textContent = formatUptime(data.uptimeSeconds);
+        $("started").textContent = "Started " + new Date(data.startedAt).toLocaleString();
+        $("count").textContent = data.totalLogEntries;
+        $("logs").innerHTML = data.logs.map(log =>
+          '<div class="log"><span class="time">' + escapeHtml(new Date(log.timestamp).toLocaleTimeString()) +
+          '</span><span class="message">' + escapeHtml(log.message) + '</span></div>'
+        ).join("");
+      } catch (_) {
+        $("connection").textContent = "DISCONNECTED";
+        $("status").textContent = "UNAVAILABLE";
+      }
+    }
+    refresh();
+    setInterval(refresh, 2000);
+  </script>
+</body>
+</html>
